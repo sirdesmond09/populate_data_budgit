@@ -1,4 +1,4 @@
-from .db_conn import DatabaseConnection
+from db_conn import DatabaseConnection
 from flask import Flask, jsonify, request
 from flask_restful import Api, Resource, abort
 from flask_cors import CORS
