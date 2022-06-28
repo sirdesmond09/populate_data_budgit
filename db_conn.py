@@ -11,18 +11,21 @@ class DatabaseConnection():
     
     @classmethod
     def __get_db_connection(cls):
-        conn = psycopg2.connect(host=os.getenv('POSTGRES_HOST'),
-                                database=os.getenv('POSTGRES_NAME'),
-                                user=os.getenv('POSTGRES_USER'),
-                                password=os.getenv('POSTGRES_PASSWORD'),
-                                port=5432)
-        
-        
-        # conn = psycopg2.connect(host="localhost",
-        #                         database=os.getenv('DB_LOCAL'),
-        #                         user="postgres",
-        #                         password=os.getenv('DB_LOCAL_PASS'),
-        #                         port=5432)
+        env = os.getenv("ENV", "DEVELOPMENT")
+        # print(env)
+        if env=="STAGING":
+            conn = psycopg2.connect(host=os.getenv('POSTGRES_HOST'),
+                                    database=os.getenv('POSTGRES_NAME'),
+                                    user=os.getenv('POSTGRES_USER'),
+                                    password=os.getenv('POSTGRES_PASSWORD'),
+                                    port=5432)
+            
+        elif env == "DEVELOPMENT":
+            conn = psycopg2.connect(host="localhost",
+                                    database=os.getenv('DB_LOCAL'),
+                                    user="postgres",
+                                    password=os.getenv('DB_LOCAL_PASS'),
+                                    port=5432)
         
         return conn
     
