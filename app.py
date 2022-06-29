@@ -1,4 +1,4 @@
-from db_conn import DatabaseConnection
+from .db_conn import DatabaseConnection
 from flask import Flask, jsonify, request
 from flask_restful import Api, Resource, abort
 from flask_cors import CORS
@@ -38,12 +38,26 @@ def get_paginated_list(results, url, start, limit):
     obj['results'] = results[(start - 1):(start - 1 + limit)]
     return obj
 
+def sort_results(data, key:str):
+    """Function to sort the data in the array by a given key."""
+    if key.startswith("-"):
+        print(key)
+        key = key.replace("-", "")
+        print(key)
+        return sorted(data, key=lambda x: x[key], reverse=True)
+   
+    return sorted(data,key=lambda x: x[key])
+
+
+
 class ProjectApi(Resource):
     def get(self):
         
         args = request.args
         state = args.get('state')
         year = args.get('year')
+        orderBy = args.get('orderBy')
+        search = args.get('search')
         # print(state, year)
         
         cur = db_cursor.get_cursor()
@@ -64,12 +78,15 @@ class ProjectApi(Resource):
         projects = cur.fetchall()
         db_cursor.close_connection()
         
+        if orderBy is not None:
+            projects = sort_results(projects, orderBy)
+        
         data = {"message":"success",
                 "data":get_paginated_list(
         projects, 
         '/projects', 
         start=request.args.get('start', 1), 
-        limit=request.args.get('limit', 20)
+        limit=request.args.get('limit', 6)
     )}
         
         
