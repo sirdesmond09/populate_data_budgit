@@ -17,6 +17,7 @@ def get_paginated_list(results, url, start, limit):
     count = len(results)
     if count < start or limit < 0:
         return {"results":"No results"}
+    
     # make response
     obj = {}
     obj['start'] = start
@@ -36,16 +37,16 @@ def get_paginated_list(results, url, start, limit):
     else:
         start_copy = start + limit
         obj['next'] = url + '?start=%d&limit=%d' % (start_copy, limit)
+        
     # finally extract result according to bounds
     obj['results'] = results[(start - 1):(start - 1 + limit)]
+    
     return obj
 
 def sort_results(data, key:str):
     """Function to sort the data in the array by a given key."""
     if key.startswith("-"):
-        print(key)
         key = key.replace("-", "")
-        print(key)
         return sorted(data, key=lambda x: x[key], reverse=True)
    
     return sorted(data,key=lambda x: x[key])
@@ -60,6 +61,7 @@ class ProjectApi(Resource):
         year = args.get('year')
         orderBy = args.get('orderBy')
         search = args.get('search')
+        ministryId = args.get('ministryId')
         # print(state, year)
         
         cur = db_cursor.get_cursor()
@@ -78,6 +80,11 @@ class ProjectApi(Resource):
         
         projects = cur.fetchall()
         db_cursor.close_connection()
+        
+        #fetch by minsitryID
+        if ministryId:
+            projects = list(filter(lambda x:str(x["ministryId"])==ministryId, projects))
+            
         
         #search
         if search:
@@ -110,9 +117,25 @@ class ProjectApi(Resource):
         
         return jsonify(data=data)
     
+
+class MinistriesApi(Resource):
+    def get(self):
+        
+        
+        cur = db_cursor.get_cursor()
+        cur.execute('SELECT "id", "name" FROM "Ministries"')
+        ministries = cur.fetchall()
+        db_cursor.close_connection()
+        
+        data = {"message":"success",
+                "data":ministries}
+        
+        return jsonify(data=data)
         
 
 
+
 api.add_resource(ProjectApi,'/projects')
+api.add_resource(MinistriesApi,'/ministries')
 
 
