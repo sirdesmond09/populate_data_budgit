@@ -2,6 +2,8 @@ from .db_conn import DatabaseConnection
 from flask import Flask, jsonify, request
 from flask_restful import Api, Resource, abort
 from flask_cors import CORS
+from iteration_utilities import unique_everseen
+
 
 app = Flask(__name__)
 CORS(app)
@@ -14,7 +16,7 @@ def get_paginated_list(results, url, start, limit):
     limit = int(limit)
     count = len(results)
     if count < start or limit < 0:
-        abort(404)
+        return {"results":"No results"}
     # make response
     obj = {}
     obj['start'] = start
@@ -72,12 +74,28 @@ class ProjectApi(Resource):
             
         if year and state:
             cur.execute('SELECT * FROM "Projects" WHERE (state=%s or state=%s) and year=%s', (state.lower(), state.title(), year))
-        
             
         
         projects = cur.fetchall()
         db_cursor.close_connection()
         
+        #search
+        if search:
+            keys = ['name', 'description', 'amount', 'year', 'state', 'address']
+            mydata = []
+            for key in keys:
+                print(key)
+                print(len(projects))
+                data = list(filter(lambda x: search.lower() in str(x[key]).lower() or str(x[key]).lower()==search.lower(), projects))
+                print(len(data))
+                if len(data) > 0:
+                    mydata.extend(data)
+                
+            # projects = mydata
+            projects = list(unique_everseen(mydata))
+            
+            
+        #sorting
         if orderBy is not None:
             projects = sort_results(projects, orderBy)
         
@@ -86,7 +104,7 @@ class ProjectApi(Resource):
         projects, 
         '/projects', 
         start=request.args.get('start', 1), 
-        limit=request.args.get('limit', 6)
+        limit=request.args.get('limit', 50)
     )}
         
         
